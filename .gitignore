@@ -1,0 +1,49 @@
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Python/cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ROS/build products
+build/
+install/
+log/
+**/build/
+**/install/
+**/log/
+**/third_party/src/
+**/third_party/build/
+**/third_party/install
+**/third_party/install/
+**/sdk/CameraSDK
+
+# Runtime data
+data/bags/
+data/maps/
+data/logs/
+data/slam_eval/
+*.mcap
+*.db3
+*.msg
+
+# Heavy binary assets
+*.zip
+*.tar.gz
+*.tgz
+*.xz
+*.so
+*.fbow
+
+# Local scratch
+debug.txt
+*.log
+*.prof
+core

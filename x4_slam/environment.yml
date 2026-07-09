@@ -1,0 +1,6 @@
+name: x4_slam
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
