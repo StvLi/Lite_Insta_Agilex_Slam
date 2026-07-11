@@ -54,7 +54,7 @@ Lite_Insta_Agilex_Slam/          ← 🎯 主仓库 Main Repo (you are here)
 │
 ├── docs/                       ← 📖 文档 Documentation
 ├── vcs/                        ← 🔗 外部依赖清单 External Dependencies
-└── (agent/)                    ← 🧠 具身智能体 · 即将到来 Coming Soon
+├── Hackathon/                  ← 🧠 具身寻物智能体 Embodied Object-Finding Agent
 ```
 
 ---
@@ -80,7 +80,7 @@ cd Lite_Insta_Agilex_Slam
 | **x4_slam** | Insta360 X4 视觉 SLAM | [`x4_slam/README.md`](x4_slam/README.md) |
 | **Lite_Agilex_API** | 松灵底盘建图/导航 | [`Lite_Agilex_API/README.md`](Lite_Agilex_API/README.md) |
 | **lite_moveit2** | Lite 双臂运动规划 | [`lite_moveit2/package.xml`](lite_moveit2/package.xml) |
-| **agent** *(coming)* | 具身智能体调度 | — |
+| **Hackathon** | 具身寻物 Agent | [`Hackathon/README.md`](Hackathon/README.md) |
 
 ---
 
@@ -118,9 +118,9 @@ cd Lite_Insta_Agilex_Slam
 
 ---
 
-## 🧠 具身智能体（即将推出）| Embodied Agent (Coming Soon)
+## 🧠 具身智能体 | Embodied Agent
 
-The agent subsystem will orchestrate all three subsystems through function-calling:
+The [Hackathon](https://github.com/StvLi/Hackathon) agent subsystem orchestrates all subsystems through function-calling:
 智能体子系统将通过 function-calling 统一调度三个子系统：
 
 ```text
