@@ -12,5 +12,5 @@
 	branch = main
 [submodule "Hackathon"]
 	path = Hackathon
-	url = https://github.com/littleZ05/Hackathon.git
+	url = git@github.com:littleZ05/Hackathon.git
 	branch = main
