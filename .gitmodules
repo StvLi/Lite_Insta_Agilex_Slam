@@ -10,3 +10,7 @@
 	path = x4_slam
 	url = https://github.com/StvLi/x4_slam.git
 	branch = main
+[submodule "Hackathon"]
+	path = Hackathon
+	url = https://github.com/StvLi/Hackathon.git
+	branch = main
