@@ -1,8 +1,22 @@
 #include "equirectangular.hpp"
 #include <rcl_interfaces/msg/set_parameters_result.hpp>
+#include <algorithm>
+#include <cctype>
 #include <cmath>
+#include <sstream>
 #include <thread>
 #include <chrono>
+
+namespace
+{
+std::string normalizeEncoding(const std::string& encoding)
+{
+    std::string normalized = encoding;
+    std::transform(normalized.begin(), normalized.end(), normalized.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return normalized;
+}
+}
 
 EquirectangularNode::EquirectangularNode()
     : Node("equirectangular_node"),
@@ -44,6 +58,12 @@ EquirectangularNode::EquirectangularNode()
     
     equirect_pub_ = create_publisher<sensor_msgs::msg::Image>(
         "/equirectangular/image", qos);
+
+    image_service_ = create_service<insta360_ros_driver::srv::GetStampedImage>(
+        "/camera/get_stamped_image",
+        std::bind(&EquirectangularNode::getStampedImageCallback, this,
+                  std::placeholders::_1, std::placeholders::_2));
+    RCLCPP_INFO(get_logger(), "Image snapshot service: /camera/get_stamped_image");
 }
 
 EquirectangularNode::~EquirectangularNode()
@@ -261,6 +281,115 @@ cv::Mat EquirectangularNode::createEquirectangular(const cv::Mat& front_img, con
     return equirect;
 }
 
+bool EquirectangularNode::buildServiceImage(
+    const sensor_msgs::msg::Image& source_image,
+    const std::string& requested_encoding,
+    uint32_t requested_width,
+    uint32_t requested_height,
+    sensor_msgs::msg::Image& output_image,
+    std::string& message) const
+{
+    uint32_t target_width = requested_width;
+    uint32_t target_height = requested_height;
+
+    if (target_width == 0 && target_height == 0) {
+        target_width = source_image.width;
+        target_height = source_image.height;
+    } else if (target_width == 0) {
+        target_width = static_cast<uint32_t>(
+            std::max(1.0, std::round(static_cast<double>(source_image.width) *
+                                     static_cast<double>(target_height) /
+                                     static_cast<double>(source_image.height))));
+    } else if (target_height == 0) {
+        target_height = static_cast<uint32_t>(
+            std::max(1.0, std::round(static_cast<double>(source_image.height) *
+                                     static_cast<double>(target_width) /
+                                     static_cast<double>(source_image.width))));
+    }
+
+    std::string target_encoding = normalizeEncoding(requested_encoding);
+    if (target_encoding.empty() || target_encoding == "passthrough" || target_encoding == "source") {
+        target_encoding = normalizeEncoding(source_image.encoding);
+    }
+
+    try {
+        cv_bridge::CvImagePtr source_ptr = cv_bridge::toCvCopy(source_image, "bgr8");
+        cv::Mat converted;
+        std::string output_encoding;
+
+        if (target_encoding == "bgr8") {
+            converted = source_ptr->image;
+            output_encoding = "bgr8";
+        } else if (target_encoding == "rgb8") {
+            cv::cvtColor(source_ptr->image, converted, cv::COLOR_BGR2RGB);
+            output_encoding = "rgb8";
+        } else if (target_encoding == "mono8") {
+            cv::cvtColor(source_ptr->image, converted, cv::COLOR_BGR2GRAY);
+            output_encoding = "mono8";
+        } else {
+            message = "Unsupported encoding '" + requested_encoding +
+                      "'. Supported encodings: bgr8, rgb8, mono8, passthrough/source.";
+            return false;
+        }
+
+        cv::Mat resized;
+        if (converted.cols != static_cast<int>(target_width) ||
+            converted.rows != static_cast<int>(target_height)) {
+            cv::resize(converted, resized, cv::Size(target_width, target_height), 0, 0, cv::INTER_AREA);
+        } else {
+            resized = converted;
+        }
+
+        cv_bridge::CvImage response_image;
+        response_image.header = source_image.header;
+        response_image.encoding = output_encoding;
+        response_image.image = resized;
+        response_image.toImageMsg(output_image);
+
+        std::ostringstream ok_message;
+        ok_message << "Returning " << output_image.width << "x" << output_image.height
+                   << " " << output_image.encoding << " image";
+        message = ok_message.str();
+        return true;
+    } catch (const std::exception& e) {
+        message = std::string("Failed to build service image: ") + e.what();
+        return false;
+    }
+}
+
+void EquirectangularNode::getStampedImageCallback(
+    const std::shared_ptr<insta360_ros_driver::srv::GetStampedImage::Request> request,
+    std::shared_ptr<insta360_ros_driver::srv::GetStampedImage::Response> response)
+{
+    sensor_msgs::msg::Image::SharedPtr latest_image;
+    {
+        std::lock_guard<std::mutex> lock(latest_image_mutex_);
+        latest_image = latest_equirect_image_;
+    }
+
+    if (!latest_image) {
+        response->success = false;
+        response->message = "No equirectangular image is available yet";
+        return;
+    }
+
+    sensor_msgs::msg::Image service_image;
+    std::string message;
+    if (!buildServiceImage(*latest_image, request->encoding, request->width, request->height,
+                           service_image, message)) {
+        response->success = false;
+        response->message = message;
+        response->stamp = latest_image->header.stamp;
+        response->frame_id = latest_image->header.frame_id;
+        return;
+    }
+
+    response->success = true;
+    response->message = message;
+    response->stamp = service_image.header.stamp;
+    response->frame_id = service_image.header.frame_id;
+    response->image = service_image;
+}
 
 void EquirectangularNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr dual_fisheye_msg)
 {
@@ -321,7 +450,12 @@ void EquirectangularNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr
         out_msg.encoding = "bgr8";
         out_msg.image = equirect_img;
         RCLCPP_INFO_ONCE(get_logger(), "Output image size: %dx%d", equirect_img.cols, equirect_img.rows);
-        equirect_pub_->publish(*out_msg.toImageMsg());
+        auto image_msg = out_msg.toImageMsg();
+        equirect_pub_->publish(*image_msg);
+        {
+            std::lock_guard<std::mutex> lock(latest_image_mutex_);
+            latest_equirect_image_ = image_msg;
+        }
         
         auto process_time = (now() - start_time).seconds();
         RCLCPP_DEBUG(get_logger(), "Processing time: %.3f seconds", process_time);

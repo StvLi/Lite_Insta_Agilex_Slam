@@ -40,13 +40,26 @@ Spark publishes:
 Development workstation subscribes:
 
 ```text
-/camera/image_raw
 /run_slam/camera_pose
 /tf
 ```
 
+The Spark and development workstation use a bandwidth-limited bridge. Remote
+RViz should not subscribe to `/camera/image_raw` by default. Normal remote
+visualization is pose/TF-only; image display is an explicit debug mode.
+
 ## Next Engineering Step
 
-Add a Spark-side headless script that starts camera, SLAM, and TF without RViz. RViz should run on `stvli@192.168.88.12`.
+Use the Spark-side headless script to start camera, SLAM, and TF without RViz:
+
+```bash
+/home/deep/peize/where_is_my_key/Lite_Insta_Agilex_Slam/x4_slam/scripts/run_slam_headless_1440.sh
+```
+
+Use the low-bandwidth RViz script on `stvli@192.168.88.12`:
+
+```bash
+/home/stvli/Desktop/where_is_my_key/src/Lite_Insta_Agilex_Slam/x4_slam/scripts/run_remote_rviz_low_bandwidth.sh
+```
 
 If DDS multicast discovery is unreliable while moving, add explicit peer configuration for the robot LAN.

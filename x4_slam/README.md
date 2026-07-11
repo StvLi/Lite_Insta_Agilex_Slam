@@ -55,6 +55,22 @@ Live SLAM, current best candidate `1440x720`:
 /home/deep/peize/where_is_my_key/Lite_Insta_Agilex_Slam/x4_slam/scripts/run_slam_live_demo_1440.sh
 ```
 
+Headless Spark live SLAM for remote visualization:
+
+```bash
+/home/deep/peize/where_is_my_key/Lite_Insta_Agilex_Slam/x4_slam/scripts/run_slam_headless_1440.sh
+```
+
+Low-bandwidth RViz on the development workstation:
+
+```bash
+/home/stvli/Desktop/where_is_my_key/src/Lite_Insta_Agilex_Slam/x4_slam/scripts/run_remote_rviz_low_bandwidth.sh
+```
+
+This remote RViz config does not subscribe to `/camera/image_raw`. It only uses
+the SLAM pose and TF path by default so the Spark-to-workstation bridge is not
+occupied by realtime video.
+
 Live SLAM, low-latency boundary test `1024x512`:
 
 ```bash
@@ -102,6 +118,7 @@ Large local outputs and vendor assets are intentionally ignored by `.gitignore`:
 - Hardware summary: [HARDWARE.md](HARDWARE.md)
 - Hardware topology: [docs/hardware_topology.md](docs/hardware_topology.md)
 - Remote visualization plan: [docs/remote_visualization_plan.md](docs/remote_visualization_plan.md)
+- Co-worker stamped image and TF2 access: [docs/coworker_image_tf2_access.md](docs/coworker_image_tf2_access.md)
 - Current deployment status: [docs/deployment_status.md](docs/deployment_status.md)
 - SLAM validation route: [docs/slam_validation.md](docs/slam_validation.md)
 - Troubleshooting: [docs/troubleshooting.md](docs/troubleshooting.md)

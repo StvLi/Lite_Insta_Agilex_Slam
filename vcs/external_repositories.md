@@ -35,8 +35,8 @@ repository for simpler maintenance.
 Lite robot ROS2 control:
 https://github.com/TeamLite-DeepCybo/lite_ros2
 
-Agilex chassis repository:
-pending
+Agilex chassis / NAVIS API integration:
+/home/stvli/Desktop/where_is_my_key/src/Lite_Agilex_API
 ```
 
-These are intentionally documented but not cloned into the main repository yet.
+The NAVIS secondary-development API wrapper lives in `Lite_Agilex_API`.

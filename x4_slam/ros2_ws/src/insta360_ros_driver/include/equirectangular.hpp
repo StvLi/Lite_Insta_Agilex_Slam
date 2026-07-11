@@ -5,9 +5,11 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <cv_bridge/cv_bridge.hpp>
 #include <opencv2/opencv.hpp>
+#include <insta360_ros_driver/srv/get_stamped_image.hpp>
 #include <memory>
 #include <mutex>
 #include <atomic>
+#include <string>
 
 class EquirectangularNode : public rclcpp::Node
 {
@@ -18,6 +20,9 @@ public:
 private:
     // Callback functions
     void imageCallback(const sensor_msgs::msg::Image::SharedPtr msg);
+    void getStampedImageCallback(
+        const std::shared_ptr<insta360_ros_driver::srv::GetStampedImage::Request> request,
+        std::shared_ptr<insta360_ros_driver::srv::GetStampedImage::Response> response);
     rcl_interfaces::msg::SetParametersResult parametersCallback(const std::vector<rclcpp::Parameter> &parameters);
     
     // Initialization functions
@@ -27,10 +32,18 @@ private:
     
     // Processing functions
     cv::Mat createEquirectangular(const cv::Mat& front_img, const cv::Mat& back_img);
+    bool buildServiceImage(
+        const sensor_msgs::msg::Image& source_image,
+        const std::string& requested_encoding,
+        uint32_t requested_width,
+        uint32_t requested_height,
+        sensor_msgs::msg::Image& output_image,
+        std::string& message) const;
     
     // ROS2 communication
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr dual_fisheye_sub_;
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr equirect_pub_;
+    rclcpp::Service<insta360_ros_driver::srv::GetStampedImage>::SharedPtr image_service_;
     
     // Parameters
     double cx_offset_;
@@ -60,6 +73,8 @@ private:
     
     // Thread safety
     std::mutex processing_mutex_;
+    std::mutex latest_image_mutex_;
+    sensor_msgs::msg::Image::SharedPtr latest_equirect_image_;
 };
 
 #endif // EQUIRECTANGULAR_HPP

@@ -14,6 +14,10 @@ LOG_DIR="${LOG_DIR:-$BASE_DIR/data/logs/live_demo_$STAMP}"
 MAP_OUT="${MAP_OUT:-$BASE_DIR/data/maps/live_$STAMP.msg}"
 EVAL_LOG_DIR="${EVAL_LOG_DIR:-$BASE_DIR/data/slam_eval/live_$STAMP}"
 BRINGUP_TIMEOUT="${BRINGUP_TIMEOUT:-45}"
+TF_REPUBLISH_HZ="${TF_REPUBLISH_HZ:-20}"
+TF_MAX_POSE_AGE_SEC="${TF_MAX_POSE_AGE_SEC:-2}"
+TF_STAMP_MODE="${TF_STAMP_MODE:-now}"
+TF_SOURCE_CHILD_FRAME="${TF_SOURCE_CHILD_FRAME:-camera_frame}"
 
 if [[ ! -f "$RVIZ_CONFIG" ]]; then
   echo "RViz config not found: $RVIZ_CONFIG" >&2
@@ -53,6 +57,8 @@ echo "Image topic: $IMAGE_TOPIC"
 echo "Stream resolution: $STREAM_RESOLUTION"
 echo "Stream bitrate: ${STREAM_BITRATE_MBPS} Mbps"
 echo "Decoder skip frame: $DECODER_SKIP_FRAME"
+echo "TF republish: ${TF_REPUBLISH_HZ} Hz, max pose age ${TF_MAX_POSE_AGE_SEC}s, stamp ${TF_STAMP_MODE}"
+echo "Source-stamped TF: map -> ${TF_SOURCE_CHILD_FRAME}"
 if [[ -n "$EQUIRECTANGULAR_CONFIG" ]]; then
   echo "Equirectangular config: $EQUIRECTANGULAR_CONFIG"
 fi
@@ -64,6 +70,8 @@ echo "Close RViz or press Ctrl-C here to stop everything."
 echo
 
 BRINGUP_ARGS=(
+  decoder:=true
+  equirectangular:=true
   stream_resolution:="$STREAM_RESOLUTION" \
   stream_bitrate_mbps:="$STREAM_BITRATE_MBPS" \
   decoder_skip_frame:="$DECODER_SKIP_FRAME"
@@ -97,6 +105,10 @@ PIDS+=("$!")
 
 sleep 2
 
+TF_REPUBLISH_HZ="$TF_REPUBLISH_HZ" \
+TF_MAX_POSE_AGE_SEC="$TF_MAX_POSE_AGE_SEC" \
+TF_STAMP_MODE="$TF_STAMP_MODE" \
+TF_SOURCE_CHILD_FRAME="$TF_SOURCE_CHILD_FRAME" \
 "$BASE_DIR/scripts/odom_to_tf.py" \
   >"$LOG_DIR/odom_to_tf.log" 2>&1 &
 PIDS+=("$!")

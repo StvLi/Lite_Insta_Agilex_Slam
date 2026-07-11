@@ -49,35 +49,37 @@ Spark publishes:
 Development workstation subscribes:
 
 ```text
-/camera/image_raw
 /run_slam/camera_pose
 /tf
 ```
+
+The Spark and development workstation are connected through a bandwidth-limited
+bridge. Remote RViz must not subscribe to `/camera/image_raw` by default. Use the
+low-bandwidth RViz config for normal operation; image display is an explicit
+debug choice only.
 
 ## First Validation
 
 On Spark:
 
 ```bash
-/home/deep/peize/where_is_my_key/Lite_Insta_Agilex_Slam/x4_slam/scripts/run_slam_live_demo_1440.sh
+/home/deep/peize/where_is_my_key/Lite_Insta_Agilex_Slam/x4_slam/scripts/run_slam_headless_1440.sh
 ```
-
-For a headless split, the next script should run only camera/SLAM/TF on Spark and not start RViz.
 
 On the development workstation:
 
 ```bash
-export ROS_DOMAIN_ID=15
-source /opt/ros/jazzy/setup.bash
-ros2 topic list
-ros2 topic hz /run_slam/camera_pose
-rviz2 -d /home/stvli/Desktop/where_is_my_key/x4_slam/config/rviz/stella_slam_demo.rviz
+/home/stvli/Desktop/where_is_my_key/src/Lite_Insta_Agilex_Slam/x4_slam/scripts/run_remote_rviz_low_bandwidth.sh
 ```
+
+This RViz config intentionally has no Image display. To verify that the
+development workstation is not pulling video across the bridge, check
+`ros2 topic info -v /camera/image_raw` on Spark and confirm there are no remote
+subscribers.
 
 ## Next Implementation Tasks
 
-1. Add a Spark-side headless live script that starts bringup, SLAM, and `odom_to_tf.py`, but not RViz.
-2. Mirror the RViz config and lightweight scripts to the development workstation workspace.
-3. Check DDS discovery across `192.168.88.11` and `192.168.88.12` with `ROS_DOMAIN_ID=15`.
-4. If multicast discovery is unreliable while moving, add a CycloneDDS/FastDDS peer configuration pinned to the robot LAN.
-5. Decide whether `/camera/image_raw` is too heavy for Wi-Fi; if needed, visualize compressed image or only pose/TF remotely.
+1. Mirror the low-bandwidth RViz config and lightweight scripts to the development workstation workspace.
+2. Check DDS discovery across `192.168.88.11` and `192.168.88.12` with `ROS_DOMAIN_ID=15`.
+3. If multicast discovery is unreliable while moving, add a CycloneDDS/FastDDS peer configuration pinned to the robot LAN.
+4. Add an optional low-resolution or compressed image relay only if operator video becomes necessary.

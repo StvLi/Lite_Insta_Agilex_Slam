@@ -12,6 +12,10 @@ STAMP="$(date +%Y%m%d_%H%M%S)"
 LOG_DIR="${LOG_DIR:-$BASE_DIR/data/logs/demo_$STAMP}"
 MAP_OUT="${MAP_OUT:-$BASE_DIR/data/maps/demo_$STAMP.msg}"
 EVAL_LOG_DIR="${EVAL_LOG_DIR:-$BASE_DIR/data/slam_eval/demo_$STAMP}"
+TF_REPUBLISH_HZ="${TF_REPUBLISH_HZ:-20}"
+TF_MAX_POSE_AGE_SEC="${TF_MAX_POSE_AGE_SEC:-2}"
+TF_STAMP_MODE="${TF_STAMP_MODE:-source}"
+TF_SOURCE_CHILD_FRAME="${TF_SOURCE_CHILD_FRAME:-camera_frame}"
 
 if [[ ! -f "$BAG/metadata.yaml" ]]; then
   echo "Bag metadata not found: $BAG/metadata.yaml" >&2
@@ -55,6 +59,8 @@ echo "Bag: $BAG"
 echo "Rate: $RATE"
 echo "Loop: $LOOP"
 echo "RViz: $RVIZ_CONFIG"
+echo "TF republish: ${TF_REPUBLISH_HZ} Hz, max pose age ${TF_MAX_POSE_AGE_SEC}s, stamp ${TF_STAMP_MODE}"
+echo "Source-stamped TF: map -> ${TF_SOURCE_CHILD_FRAME}"
 echo "Logs: $LOG_DIR"
 echo
 echo "Close RViz or press Ctrl-C here to stop everything."
@@ -68,6 +74,10 @@ PIDS+=("$!")
 
 sleep 4
 
+TF_REPUBLISH_HZ="$TF_REPUBLISH_HZ" \
+TF_MAX_POSE_AGE_SEC="$TF_MAX_POSE_AGE_SEC" \
+TF_STAMP_MODE="$TF_STAMP_MODE" \
+TF_SOURCE_CHILD_FRAME="$TF_SOURCE_CHILD_FRAME" \
 "$BASE_DIR/scripts/odom_to_tf.py" \
   >"$LOG_DIR/odom_to_tf.log" 2>&1 &
 PIDS+=("$!")
