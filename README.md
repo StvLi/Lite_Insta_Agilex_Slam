@@ -120,7 +120,7 @@ cd Lite_Insta_Agilex_Slam
 
 ## 🧠 具身智能体 | Embodied Agent
 
-The [Hackathon](https://github.com/StvLi/Hackathon) agent subsystem orchestrates all subsystems through function-calling:
+The [Hackathon](https://github.com/littleZ05/Hackathon) agent subsystem orchestrates all subsystems through function-calling:
 智能体子系统将通过 function-calling 统一调度三个子系统：
 
 ```text
