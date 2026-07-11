@@ -1,9 +1,0 @@
-uint32 width
-uint32 height
-string encoding
----
-bool success
-string message
-builtin_interfaces/Time stamp
-string frame_id
-sensor_msgs/Image image
