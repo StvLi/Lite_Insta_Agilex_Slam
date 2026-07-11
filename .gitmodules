@@ -1,0 +1,12 @@
+[submodule "Lite_Agilex_API"]
+	path = Lite_Agilex_API
+	url = https://github.com/StvLi/Lite_Agilex_API.git
+	branch = main
+[submodule "lite_moveit2"]
+	path = lite_moveit2
+	url = https://github.com/StvLi/lite_moveit2.git
+	branch = main
+[submodule "x4_slam"]
+	path = x4_slam
+	url = https://github.com/StvLi/x4_slam.git
+	branch = main
